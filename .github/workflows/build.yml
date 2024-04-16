@@ -6,52 +6,63 @@
 #       - run: node --version
 #       - run: npm --version
 
-name: MongoDB CRUD Operations
+name: Mongodb Service Example
 
 on:
-  # Triggers the workflow on a push event to the main branch
   push:
     branches:
-      - main
-  # Allows manual triggering of the workflow
-  workflow_dispatch:
+    - main
+  pull_request:
+    branches:
+    - main
+
+defaults:
+  run:
+    working-directory: ./mongodb
 
 jobs:
-  perform-crud-operations:
-    # Run the job on the latest Windows environment
-    runs-on: windows-latest
+  container-job:
+    runs-on: ubuntu-latest
+
+    # runs all of the steps inside the specified container rather than on the VM host.
+    # Because of this the network configuration changes from host based network to a container network.
+    container:
+      image:  node:10.16-jessie
+
+    services:
+      mongodb:
+        image: mongo
+        ports:
+        - 27017:27017
+
     steps:
-    # Step to check out the repository's code
-    - name: Checkout code
-      uses: actions/checkout@v3  # Updated to version 3 of actions/checkout
+    - uses: actions/checkout@v1
+    - run: npm ci
+    - run: node client.js
+      env:
+        # use mongodb for the host here because we have specified a container for the job.
+        # If we were running the job on the VM this would be localhost
+        MONGODB_HOST: mongodb
+        MONGODB_PORT: ${{ job.services.mongodb.ports[27017] }}
 
-    # Step to set up Node.js 20
-    - name: Set up Node.js 20
-      uses: actions/setup-node@v3  # Use the same version as before, setup-node version 3 supports Node.js 20
-      with:
-        node-version: '20'  # Specifying Node.js version 20
+# Runs all steps on the VM
+# The service containers will use host port binding instead of container networking so you access them via localhost rather than the service name
+  vm-job:
+    runs-on: ubuntu-latest
 
-    # Step to install dependencies (if any)
-    - name: Install dependencies
-      run: npm install  # Modify or remove this line as per your project needs
+    services:
+      mongodb:
+        image: mongo
+        ports:
+        # will assign a random free host port
+        - 27017/tcp
 
-    # Step to run CRUD operations directly using MongoDB shell commands
-    - name: Run CRUD operations
-      run: |
-        # Define your MongoDB connection URI, e.g., mongodb://username:password@host:port/dbname
-        $mongo_uri = "mongodb://username:password@localhost:27017/mydb"
-        
-        # Example CRUD operations:
-        # Create a document in the 'users' collection
-        echo 'db.users.insert({ name: "Alice", age: 30 })' | mongo $mongo_uri
-        
-        # Read documents from the 'users' collection
-        echo 'db.users.find({})' | mongo $mongo_uri
-        
-        # Update a document in the 'users' collection
-        echo 'db.users.updateOne({ name: "Alice" }, { $set: { age: 31 } })' | mongo $mongo_uri
-        
-        # Delete a document from the 'users' collection
-        echo 'db.users.deleteOne({ name: "Alice" })' | mongo $mongo_uri
-        
-        # Add more MongoDB shell commands as needed
+    steps:
+    - uses: actions/checkout@v1
+    - run: npm ci
+    - run: node client.js
+      env:
+        # use localhost for the host here because we are running the job on the VM.
+        # If we were running the job on in a container this would be mongodb
+        MONGODB_HOST: localhost
+        MONGODB_PORT: ${{ job.services.mongodb.ports[27017] }} # get randomly assigned published port
