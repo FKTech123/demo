@@ -6,38 +6,43 @@
 #       - run: node --version
 #       - run: npm --version
 
-name: MongoDB Workflow on Windows
+name: MongoDB CRUD Operations
 
 on:
+  # You can customize this to run on specific triggers
   push:
     branches:
       - main
+  workflow_dispatch:
+    # Allows manual triggering of the workflow
 
 jobs:
-  mongodb-operations:
+  perform-crud-operations:
     runs-on: windows-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Install MongoDB
-        run: |
-          choco install mongodb
-          echo 'MongoDB installed successfully.'
+    - name: Run CRUD operations
+      run: |
+        # Define your MongoDB connection URI, e.g., mongodb://username:password@host:port/dbname
+        $mongo_uri = "mongodb://username:password@localhost:27017/mydb"
+        
+        # Example CRUD operations:
+        # Replace the below MongoDB shell commands with your desired CRUD operations
 
-      - name: Start MongoDB server
-        run: |
-          mongod --dbpath=data --logpath=log.txt --fork
-          echo 'MongoDB server started.'
+        # Create a document in the 'users' collection
+        echo 'db.users.insert({ name: "Alice", age: 30 })' | mongo $mongo_uri
+        
+        # Read documents from the 'users' collection
+        echo 'db.users.find({})' | mongo $mongo_uri
+        
+        # Update a document in the 'users' collection
+        echo 'db.users.updateOne({ name: "Alice" }, { $set: { age: 31 } })' | mongo $mongo_uri
+        
+        # Delete a document from the 'users' collection
+        echo 'db.users.deleteOne({ name: "Alice" })' | mongo $mongo_uri
+        
+        # Add more commands as needed
 
-      - name: Run MongoDB commands
-        run: |
-          # Connect to the MongoDB server
-          mongo --eval "db.runCommand({ ping: 1 })"
-
-          # Create a new database and collection
-          mongo --eval "db = db.getSiblingDB('test_db'); db.example_collection.insertOne({ id: 1, name: 'Test Name' });"
-
-          # Query the collection and print the result
-          mongo --eval "db.example_collection.find().toArray();"
+    # Add more steps if necessary
