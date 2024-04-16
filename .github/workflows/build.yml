@@ -23,17 +23,17 @@ jobs:
     steps:
     # Step to check out the repository's code
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3  # Updated to version 3 of actions/checkout
 
     # Step to set up Node.js 20
     - name: Set up Node.js 20
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v3  # Use the same version as before, setup-node version 3 supports Node.js 20
       with:
-        node-version: '20'
+        node-version: '20'  # Specifying Node.js version 20
 
-    # Step to install dependencies if required (e.g. if you use npm packages)
+    # Step to install dependencies (if any)
     - name: Install dependencies
-      run: npm install # Skip or modify this line if not needed
+      run: npm install  # Modify or remove this line as per your project needs
 
     # Step to run CRUD operations directly using MongoDB shell commands
     - name: Run CRUD operations
@@ -54,4 +54,4 @@ jobs:
         # Delete a document from the 'users' collection
         echo 'db.users.deleteOne({ name: "Alice" })' | mongo $mongo_uri
         
-        # Add more commands as needed
+        # Add more MongoDB shell commands as needed
