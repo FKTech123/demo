@@ -8,28 +8,28 @@ on:
 jobs:
   mongodb-operations:
     runs-on: windows-latest
-    services:
-      mongodb:
-        image: mongo:latest
-        ports:
-          - 27017:27017
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install MongoDB shell
+      - name: Install MongoDB
         run: |
           choco install mongodb
-          echo 'MongoDB shell installed successfully.'
+          echo 'MongoDB installed successfully.'
+
+      - name: Start MongoDB server
+        run: |
+          mongod --dbpath=data --logpath=log.txt --fork
+          echo 'MongoDB server started.'
 
       - name: Run MongoDB commands
         run: |
           # Connect to the MongoDB server
-          mongo --host 127.0.0.1 --port 27017 --eval "db.runCommand({ ping: 1 })"
+          mongo --eval "db.runCommand({ ping: 1 })"
 
           # Create a new database and collection
-          mongo --host 127.0.0.1 --port 27017 --eval "db = db.getSiblingDB('test_db'); db.example_collection.insertOne({ id: 1, name: 'Test Name' });"
+          mongo --eval "db = db.getSiblingDB('test_db'); db.example_collection.insertOne({ id: 1, name: 'Test Name' });"
 
           # Query the collection and print the result
-          mongo --host 127.0.0.1 --port 27017 --eval "db.example_collection.find().toArray();"
+          mongo --eval "db.example_collection.find().toArray();"
